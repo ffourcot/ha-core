@@ -91,6 +91,16 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         enabled=lambda x: True,
     ),
     MelcloudSensorEntityDescription(
+        key="condensing_temperature",
+        translation_key="condensing_temperature",
+        icon="mdi:thermometer",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.device._device_conf["Device"].get("CondensingTemperature"),
+        enabled=lambda x: True,
+    ),
+    MelcloudSensorEntityDescription(
         key="daily_energy",
         translation_key="daily_energy",
         icon="mdi:factory",
