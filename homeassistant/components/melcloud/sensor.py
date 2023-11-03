@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 from typing import Any
 
 from pymelcloud import DEVICE_TYPE_ATA, DEVICE_TYPE_ATW
@@ -26,6 +27,39 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MelCloudDevice
 from .const import DOMAIN
+
+
+def get_consumed_energy(x):
+    dev = x.device
+    dev_conf = dev._device_conf["Device"]
+    date = dev_conf.get("DailyEnergyConsumedDate")
+    if not date:
+        return None
+    parsed_date = datetime.fromisoformat(date)
+    if datetime.now() - parsed_date > timedelta(days=1):
+        return 0
+    return dev_conf.get("DailyHeatingEnergyConsumed")
+
+
+def get_produced_energy(x):
+    dev = x.device
+    dev_conf = dev._device_conf["Device"]
+    date = dev_conf.get("DailyEnergyProducedDate")
+    if not date:
+        return None
+    parsed_date = datetime.fromisoformat(date)
+    if datetime.now() - parsed_date > timedelta(days=1):
+        return 0
+    return dev_conf.get("DailyHeatingEnergyProduced")
+
+
+def compute_cop(x):
+    dev = x.device
+    dev_conf = dev._device_conf["Device"]
+    consumed = dev_conf.get("DailyHeatingEnergyConsumed")
+    if not consumed:
+        return 0
+    return dev_conf.get("DailyHeatingEnergyProduced") / consumed
 
 
 @dataclass
@@ -140,6 +174,34 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda x: x.device.daily_energy_consumed,
+        enabled=lambda x: True,
+    ),
+    MelcloudSensorEntityDescription(
+        key="daily_energy_florent",
+        translation_key="daily_energy_florent",
+        icon="mdi:factory",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=get_consumed_energy,
+        enabled=lambda x: True,
+    ),
+    MelcloudSensorEntityDescription(
+        key="daily_produced",
+        translation_key="daily_produced",
+        icon="mdi:factory",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=get_produced_energy,
+        enabled=lambda x: True,
+    ),
+    MelcloudSensorEntityDescription(
+        key="calcul_cop",
+        translation_key="calcul_cop",
+        icon="mdi:factory",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=compute_cop,
         enabled=lambda x: True,
     ),
 )
