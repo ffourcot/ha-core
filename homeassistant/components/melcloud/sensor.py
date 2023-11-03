@@ -15,7 +15,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfEnergy, UnitOfTemperature
+from homeassistant.const import (
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfPower,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -98,6 +103,33 @@ ATW_SENSORS: tuple[MelcloudSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda x: x.device._device_conf["Device"].get("CondensingTemperature"),
+        enabled=lambda x: True,
+    ),
+    MelcloudSensorEntityDescription(
+        key="fan_frequency",
+        translation_key="fan_frequency",
+        icon="mdi:fan",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.device._device_conf["Device"].get("HeatPumpFrequency"),
+        enabled=lambda x: True,
+    ),
+    MelcloudSensorEntityDescription(
+        key="rssi",
+        translation_key="rssi",
+        icon="mdi:access-point",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda x: x.device._device_conf["Device"].get("WifiSignalStrength"),
+        enabled=lambda x: True,
+    ),
+    MelcloudSensorEntityDescription(
+        key="energy_produced",
+        translation_key="energy_produced",
+        icon="mdi:heating-coil",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        device_class=SensorDeviceClass.POWER,
+        value_fn=lambda x: x.device._device_conf["Device"].get("CurrentEnergyProduced"),
         enabled=lambda x: True,
     ),
     MelcloudSensorEntityDescription(
